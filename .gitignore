@@ -1,0 +1,13 @@
+# Ignore PHP Composer dependencies
+# PHP Composer bağımlılıklarını göz ardı et
+/vendor/
+
+# Ignore XAMPP-specific files if any
+# Varsa XAMPP'ye özgü dosyaları göz ardı et
+# For example:
+# /temp/
+
+# Ignore environment specific configuration files that may contain sensitive data
+# Hassas veri içerebilecek ortama özgü yapılandırma dosyalarını göz ardı et
+# For example, if you had a different config file for production:
+# /config/db_config.prod.php
