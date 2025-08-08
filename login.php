@@ -22,43 +22,47 @@ require_once 'config/db_config.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
-
+    
     if (empty($username) || empty($password)) {
         $error_message = "Kullanıcı adı ve şifre boş bırakılamaz.";
     } else {
-        // SQL Injection saldırılarını önlemek için prepared statement kullan.
-        // Use a prepared statement to prevent SQL Injection attacks.
-        $stmt = $pdo->prepare("SELECT user_id, username, password, role FROM Users WHERE username = :username");
-        $stmt->bindParam(':username', $username);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Kullanıcı bulunduysa ve şifre doğruysa
-        // If a user is found and the password is correct
-        if ($user && password_verify($password, $user['password'])) {
-            // Oturum değişkenlerini ayarla
-            // Set session variables
-            $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role'] = $user['role'];
-
-            // Ana sayfaya yönlendir
-            // Redirect to the main page
-            header('Location: index.php');
-            exit();
-        } else {
-            $error_message = "Hatalı kullanıcı adı veya şifre.";
+        try {
+            // SQL Injection saldırılarını önlemek için prepared statement kullan.
+            // Use a prepared statement to prevent SQL Injection attacks.
+            $stmt = $pdo->prepare("SELECT user_id, username, password, role FROM Users WHERE username = :username");
+            $stmt->bindParam(':username', $username);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Kullanıcı bulunduysa ve şifre doğruysa
+            // If a user is found and the password is correct
+            if ($user && password_verify($password, $user['password'])) {
+                // Oturum değişkenlerini ayarla
+                // Set session variables
+                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+                
+                // Ana sayfaya yönlendir
+                // Redirect to the main page
+                header('Location: index.php');
+                exit();
+            } else {
+                $error_message = "Hatalı kullanıcı adı veya şifre.";
+            }
+        } catch (PDOException $e) {
+            error_log("Login hatası: " . $e->getMessage());
+            $error_message = "Sistem hatası. Lütfen daha sonra tekrar deneyin.";
         }
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ACYS - Giriş Yap</title>
-
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <link rel="stylesheet" href="public/adminlte/plugins/fontawesome-free/css/all.min.css">
     <link rel="stylesheet" href="public/adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
@@ -72,13 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card">
         <div class="card-body login-card-body">
             <p class="login-box-msg">Oturumunuzu başlatmak için giriş yapın</p>
-
             <?php if (isset($error_message)): ?>
                 <div class="alert alert-danger" role="alert">
-                    <?php echo $error_message; ?>
+                    <?php echo htmlspecialchars($error_message); ?>
                 </div>
             <?php endif; ?>
-
             <form action="login.php" method="post">
                 <div class="input-group mb-3">
                     <input type="text" name="username" class="form-control" placeholder="Kullanıcı Adı" required>
